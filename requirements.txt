@@ -1,0 +1,1 @@
+multibase-dataclass @ git+https://github.com/cardoso-neto/multibase_dataclass.git@master
