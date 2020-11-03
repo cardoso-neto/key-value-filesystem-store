@@ -1,6 +1,7 @@
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import overload, Union
 
 from multibase_dataclass import Multibase 
 
@@ -8,6 +9,7 @@ from multibase_dataclass import Multibase
 ROOT = Path("./tmp")
 
 
+@dataclass(frozen=True)
 class File:
     name: str
     content: Multibase
@@ -20,19 +22,29 @@ def write_file(parent_folder: Path, file: File):
 
 
 def safe_mkdir(dir_path: Union[str, Path]):
-    # make sure it's a Path instance
-    # check if exists
-    # create it if it doesn't
-    pass
+    dir_path = Path(dir_path)
+    if not dir_path.is_dir():
+        dir_path.mkdir(parents=True, exist_ok=True)
 
 
-def get(full_path: Path) -> Multibase:
-    if full_path.is_file():
-        with open(full_path, "rb") as file_handler:
-            file_content = file_handler.read()
-        encoded = Multibase.encode("base64", file_content)
-        return encoded
-    raise ValueError(f"Key {full_path} could not be found.")
+@overload
+def get(key: Path) -> Multibase: ...
+
+@overload
+def get(key: Mapping) -> dict: ...
+
+def get(key: Path) -> Multibase:
+    if isinstance(key, Mapping):
+        # TODO: get with deeply nested json should return a new json
+        pass
+    if isinstance(key, Path):
+        full_path = key
+        if full_path.is_file():
+            with open(full_path, "rb") as file_handler:
+                file_content = file_handler.read()
+            encoded = Multibase.encode("base64", file_content)
+            return encoded
+        raise ValueError(f"Key {full_path} could not be found.")
 
 
 def put(obj, prefix: Path = ROOT):
